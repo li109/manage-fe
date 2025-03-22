@@ -57,6 +57,20 @@ export const constantRouterMap = [
         meta: { title: '个人中心' }
       }
     ]
+  },
+  {
+    path: '/private',
+    component: Layout,
+    hidden: true,
+    redirect: 'noredirect',
+    children: [
+      {
+        path: 'detail',
+        component: (resolve) => require(['@/views/order/components/operate'], resolve),
+        name: '操作订单',
+        meta: { title: '操作订单', noCache: true }
+      }
+    ]
   }
 ]
 

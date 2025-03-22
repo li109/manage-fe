@@ -14,11 +14,11 @@ module.exports = {
   /**
    * @description 记住密码状态下的token在Cookie中存储的天数，默认1天
    */
-  tokenCookieExpires: 1,
+  tokenCookieExpires: 7,
   /**
    * @description 记住密码状态下的密码在Cookie中存储的天数，默认1天s
    */
-  passCookieExpires: 1,
+  passCookieExpires: 7,
   /**
    * @description token key
    */
@@ -34,7 +34,7 @@ module.exports = {
   /**
    * 是否显示设置的底部信息
    */
-  showFooter: true,
+  showFooter: false,
   /**
    * 底部文字，支持html语法
    */
