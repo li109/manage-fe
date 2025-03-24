@@ -24,3 +24,11 @@ export function addOrder(data) {
     data
   })
 }
+
+export function deleteOrder(data) {
+  return request({
+    url: 'api/order/delete',
+    method: 'delete',
+    data
+  })
+}
