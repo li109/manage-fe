@@ -17,6 +17,16 @@ export function getOrderList(page, size) {
   })
 }
 
+export function getOrderDetails(id) {
+  return request({
+    url: 'api/order/info',
+    method: 'get',
+    params: {
+      id
+    }
+  })
+}
+
 export function addOrder(data) {
   return request({
     url: 'api/order/save',
@@ -30,5 +40,16 @@ export function deleteOrder(data) {
     url: 'api/order/delete',
     method: 'delete',
     data
+  })
+}
+
+// 查询全部订单编号
+export function getOrderNumList(orderNum) {
+  return request({
+    url: 'api/order/orderNumList',
+    method: 'get',
+    params: {
+      orderNum
+    }
   })
 }

@@ -31,16 +31,29 @@ export const constantRouterMap = [
       }
     ]
   },
+  // {
+  //   path: '/',
+  //   component: Layout,
+  //   redirect: '/dashboard',
+  //   children: [
+  //     {
+  //       path: 'dashboard',
+  //       component: (resolve) => require(['@/views/home'], resolve),
+  //       name: 'Dashboard',
+  //       meta: { title: '首页', icon: 'index', affix: true, noCache: true }
+  //     }
+  //   ]
+  // },
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
+    redirect: '/declare',
     children: [
       {
-        path: 'dashboard',
-        component: (resolve) => require(['@/views/home'], resolve),
-        name: 'Dashboard',
-        meta: { title: '首页', icon: 'index', affix: true, noCache: true }
+        path: 'declare',
+        component: (resolve) => require(['@/views/declare'], resolve),
+        name: 'Declare',
+        meta: { title: '工序申报', icon: 'index', affix: true, noCache: true }
       }
     ]
   },

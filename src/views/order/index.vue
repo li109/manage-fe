@@ -13,7 +13,7 @@
       <el-table-column type="index" label="序号" width="50" />
       <el-table-column prop="orderNum" label="生产单号" width="120" show-overflow-tooltip>
         <template slot-scope="scope">
-          <span class="click-btn">{{ scope.row.orderNum }}</span>
+          <span class="click-btn" @click="goto('view', scope.row.id)">{{ scope.row.orderNum }}</span>
         </template>
       </el-table-column>
       <el-table-column prop="productTitle" label="产品名称" />
@@ -23,7 +23,7 @@
       <!-- <el-table-column prop="shipmentWay" label="订单状态" /> -->
       <el-table-column label="操作" width="130px" align="center" fixed="right">
         <template slot-scope="scope">
-          <span class="click-btn">编辑</span>
+          <span class="click-btn" @click="goto('edit', scope.row.id)">编辑</span>
           <span class="click-btn" @click="deleteItem(scope.row.id)">删除</span>
         </template>
       </el-table-column>
@@ -77,10 +77,12 @@ export default {
       this.page.page = val
       this.getList()
     },
-    goto(type) {
-      if (type === 'add') {
-        this.$router.push({ path: '/private/detail', query: { type }})
+    goto(type, id) {
+      let query = { type }
+      if (id == '0' || id) {
+        query = { type, id }
       }
+      this.$router.push({ path: '/private/detail', query })
     },
     deleteItem(id) {
       this.$confirm('此操作将永久删除该订单, 是否继续?', '提示', {
