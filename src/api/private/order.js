@@ -39,6 +39,15 @@ export function addOrder(data) {
   })
 }
 
+// 编辑订单
+export function editOrder(data) {
+  return request({
+    url: 'api/order/update',
+    method: 'put',
+    data
+  })
+}
+
 export function deleteOrder(data) {
   return request({
     url: 'api/order/delete',
@@ -64,6 +73,15 @@ export function updateProcedure(data) {
     url: 'api/procedure/update',
     method: 'put',
     data
+  })
+}
+
+// 审核工序信息
+export function updateCheck(params) {
+  return request({
+    url: 'api/procedure/check',
+    method: 'post',
+    params
   })
 }
 

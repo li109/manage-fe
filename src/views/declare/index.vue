@@ -55,7 +55,7 @@
         <el-table-column label="审核" align="center" width="68">
           <template slot-scope="scope">
             <span v-if="scope.row.isCheck" class="check">已审核</span>
-            <span v-else class="click-btn">审核</span>
+            <span v-else class="click-btn" @click="check(scope.row)">审核</span>
           </template>
         </el-table-column>
       </el-table>
@@ -75,13 +75,33 @@
         <el-button type="primary" @click="confirmApply">确 定</el-button>
       </div>
     </el-dialog>
+    <el-dialog :title="checkTitle" :visible.sync="checkDialog" width="80%" :show-close="false" center>
+      <div class="check-content">
+        <div class="item">
+          <div>工艺要求</div>
+          <div>{{ currentCheck.workmanship }}</div>
+        </div>
+        <div class="item">
+          <div>生产数量</div>
+          <div>{{ currentCheck.produceNum }}</div>
+        </div>
+        <div class="item">
+          <div>损耗数量</div>
+          <div>{{ currentCheck.lossNum }}</div>
+        </div>
+      </div>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="cancelCheck">取 消</el-button>
+        <el-button type="primary" @click="confirmCheck">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
  
 import { deepClone } from '@/utils/index'
-import { getOrderNumList, getOrderDetails, updateProcedure } from '@/api/private/order'
+import { getOrderNumList, getOrderDetails, updateProcedure, updateCheck } from '@/api/private/order'
 export default {
   name: 'Order',
   data() {
@@ -126,7 +146,10 @@ export default {
           produceNum: [{ required: true, message: '请输入生产数量', trigger: 'blur' }],
           lossNum: [{ required: true, message: '请输入损耗数量', trigger: 'blur' }]
       },
-      currentProcedure: {}
+      currentProcedure: {},
+      checkDialog: false,
+      checkTitle: '审核',
+      currentCheck: {},
     }
   },
   created() {
@@ -185,7 +208,7 @@ export default {
           this.currentProcedure.produceNum = this.applyForm.produceNum;
           this.currentProcedure.lossNum = this.applyForm.lossNum;
           updateProcedure(this.currentProcedure).then(res => {
-            if (res) {
+            if (!res) {
               this.cancelApply();
               this.queryOrder();
               this.$message.success('申报成功');
@@ -194,6 +217,35 @@ export default {
             this.$message.error('申报失败');
           });
         }
+      });
+    },
+    check(row) {
+      if(row) {
+        this.currentCheck = deepClone(row);
+        if(this.currentCheck.produceNum || this.currentCheck.lossNum || this.currentCheck.createUserName) {
+          this.checkTitle = `${row.label}工序审核`;
+          this.checkDialog = true;
+        } else {
+          this.$message({
+            message: '该工序未申报！',
+            type: 'warning'
+          });
+        }
+      }
+    },
+    cancelCheck() {
+      this.currentCheck = {};
+      this.checkDialog = false;
+    },
+    confirmCheck() {
+      updateCheck({id: this.currentCheck.id}).then(res => {
+        if (!res) {
+          this.cancelCheck();
+          this.queryOrder();
+          this.$message.success('审核成功');
+        }
+      }).catch(() => {
+        this.$message.error('审核失败');
       });
     }
   }
@@ -207,10 +259,13 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-
-    .input-label {
-      font-size: 14px;
-      margin-right: 10px;
+    .left {
+      display: flex;
+      align-items: center;
+      .input-label {
+        font-size: 13px;
+        margin-right: 4px;
+      }
     }
   }
 
@@ -225,12 +280,12 @@ export default {
         display: flex;
         margin-bottom: 10px;
         div:nth-child(1) {
-          width: 60px;
+          width: 70px;
           text-align: right;
           font-weight: 600;
         }
         div:nth-child(2) {
-          width: calc(100% - 72px);
+          width: calc(100% - 82px);
           margin-left: 10px;
         }
       }
@@ -272,5 +327,23 @@ export default {
 
 .el-table__body {
   width: 100% !important;
+}
+
+.check-content {
+  width: 100%;
+  .item {
+    width: 100%;
+    display: flex;
+    margin-bottom: 10px;
+    div:nth-child(1) {
+      width: 80px;
+      text-align: right;
+      font-weight: 600;
+    }
+    div:nth-child(2) {
+      width: calc(100% - 112px);
+      margin-left: 10px;
+    }
+  }
 }
 </style>
