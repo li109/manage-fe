@@ -11,30 +11,28 @@
       </div>
     </div>
     <div class="details" v-if="showFlag">
-      <div class="details-part">
-        <div><span>产品名称:</span><span>{{ form.productTitle }}</span></div>
-        <div><span>成品数量:</span><span>{{ form.productCount }}</span></div>
-      </div>
       <el-collapse v-model="activeNames">
         <el-collapse-item title="工单详情展开" name="1">
           <div class="details-content">
-            <div><span>下单时间:</span><span>{{ form.orderTime }}</span></div>
-            <div><span>客户名称:</span><span>{{ form.customerName }}</span></div>
-            <div><span>交货日期:</span><span>{{ form.deliveryDate }}</span></div>
-            <div><span>成品尺寸:</span><span>{{ form.productSize }}</span></div>
-            <div><span>拼版尺寸:</span><span>{{ form.makeUpSize }}</span></div>
-            <div><span>面纸配置:</span><span>{{ form.facialTissueSet }}</span></div>
-            <div><span>调纸尺寸:</span><span>{{ form.adjustPaperSize }}</span></div>
-            <div><span>切纸尺寸:</span><span>{{ form.cutPaperSize }}</span></div>
-            <div><span>印刷颜色:</span><span>{{ form.printColor }}</span></div>
-            <div><span>瓦纸配置:</span><span>{{ form.tilePaperSet }}</span></div>
-            <div><span>瓦纸尺寸:</span><span>{{ form.tilePaperSize }}</span></div>
-            <div><span>刀模:</span><span>{{ form.knifeMold }}</span></div>
-            <div><span>卡格要求:</span><span>{{ form.cardRequirements }}</span></div>
-            <div><span>出货方式:</span><span>{{ form.shipmentWay }}</span></div>
-            <div><span>打包要求:</span><span>{{ form.packRequire }}</span></div>
-            <div><span>重要备注:</span><span>{{ form.remarks }}</span></div>
-            <div><span>开单员:</span><span>{{ form.createUserName }}</span></div>
+            <div class="content-item"><div>产品名称:</div><div>{{ form.productTitle }}</div></div>
+            <div class="content-item"><div>成品数量:</div><div>{{ form.productCount }}</div></div>
+            <div class="content-item"><div>下单时间:</div><div>{{ form.orderTime }}</div></div>
+            <div class="content-item"><div>客户名称:</div><div>{{ form.customerName }}</div></div>
+            <div class="content-item"><div>交货日期:</div><div>{{ form.deliveryDate }}</div></div>
+            <div class="content-item"><div>成品尺寸:</div><div>{{ form.productSize }}</div></div>
+            <div class="content-item"><div>拼版尺寸:</div><div>{{ form.makeUpSize }}</div></div>
+            <div class="content-item"><div>面纸配置:</div><div>{{ form.facialTissueSet }}</div></div>
+            <div class="content-item"><div>调纸尺寸:</div><div>{{ form.adjustPaperSize }}</div></div>
+            <div class="content-item"><div>切纸尺寸:</div><div>{{ form.cutPaperSize }}</div></div>
+            <div class="content-item"><div>印刷颜色:</div><div>{{ form.printColor }}</div></div>
+            <div class="content-item"><div>瓦纸配置:</div><div>{{ form.tilePaperSet }}</div></div>
+            <div class="content-item"><div>瓦纸尺寸:</div><div>{{ form.tilePaperSize }}</div></div>
+            <div class="content-item"><div>刀模:</div><div>{{ form.knifeMold }}</div></div>
+            <div class="content-item"><div>卡格要求:</div><div>{{ form.cardRequirements }}</div></div>
+            <div class="content-item"><div>出货方式:</div><div>{{ form.shipmentWay }}</div></div>
+            <div class="content-item"><div>打包要求:</div><div>{{ form.packRequire }}</div></div>
+            <div class="content-item"><div>重要备注:</div><div>{{ form.remarks }}</div></div>
+            <div class="content-item"><div>开单员:</div><div>{{ form.createUserName }}</div></div>
           </div>
         </el-collapse-item>
       </el-collapse>
@@ -73,16 +71,17 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="applyDialog = false">取 消</el-button>
-        <el-button type="primary" @click="applyDialog = false">确 定</el-button>
+        <el-button @click="cancelApply">取 消</el-button>
+        <el-button type="primary" @click="confirmApply">确 定</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-
-import { getOrderNumList, getOrderDetails } from '@/api/private/order'
+ 
+import { deepClone } from '@/utils/index'
+import { getOrderNumList, getOrderDetails, updateProcedure } from '@/api/private/order'
 export default {
   name: 'Order',
   data() {
@@ -126,7 +125,8 @@ export default {
       applyRules:{
           produceNum: [{ required: true, message: '请输入生产数量', trigger: 'blur' }],
           lossNum: [{ required: true, message: '请输入损耗数量', trigger: 'blur' }]
-      }
+      },
+      currentProcedure: {}
     }
   },
   created() {
@@ -168,9 +168,33 @@ export default {
     },
     apply(row) {
       if(row) {
+        this.currentProcedure = deepClone(row);
         this.applyTitle = `${row.label}工序申报`;
         this.applyDialog = true;
       }
+    },
+    cancelApply() {
+      this.currentProcedure = {};
+      this.applyForm.produceNum = '';
+      this.applyForm.lossNum = '';
+      this.applyDialog = false;
+    },
+    confirmApply() {
+      this.$refs.applyForm.validate(valid => {
+        if (valid) {
+          this.currentProcedure.produceNum = this.applyForm.produceNum;
+          this.currentProcedure.lossNum = this.applyForm.lossNum;
+          updateProcedure(this.currentProcedure).then(res => {
+            if (res) {
+              this.cancelApply();
+              this.queryOrder();
+              this.$message.success('申报成功');
+            }
+          }).catch(() => {
+            this.$message.error('申报失败');
+          });
+        }
+      });
     }
   }
 }
@@ -193,31 +217,21 @@ export default {
   .details {
     margin-top: 20px;
 
-    .details-part {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      font-size: 14px;
-
-      div {
-        margin-right: 20px;
-
-        span:nth-child(2) {
-          display: inline-block;
-          min-width: 60px;
-          margin-left: 10px;
-        }
-      }
-    }
-
     .details-content {
       margin-top: 6px;
 
-      div {
+      .content-item {
+        width: 100%;
+        display: flex;
         margin-bottom: 10px;
-
-        span {
-          margin-right: 10px;
+        div:nth-child(1) {
+          width: 60px;
+          text-align: right;
+          font-weight: 600;
+        }
+        div:nth-child(2) {
+          width: calc(100% - 72px);
+          margin-left: 10px;
         }
       }
     }

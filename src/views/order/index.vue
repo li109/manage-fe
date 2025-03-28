@@ -2,10 +2,11 @@
   <div class="app-container">
     <div class="head-container">
       <div class="condition">
-        <el-input size="mini" placeholder="订单编号" style="width: 200px;" clearable />
+        <span class="text">生产单号:</span>
+        <el-input v-model="searchNum" size="mini" placeholder="请输入生产单号" style="width: 200px;" clearable />
       </div>
       <div class="btns">
-        <el-button type="primary" size="mini">查询</el-button>
+        <el-button type="primary" size="mini" @click="getList">查询</el-button>
         <el-button type="success" size="mini" @click="goto('add')">新增</el-button>
       </div>
     </div>
@@ -17,11 +18,11 @@
         </template>
       </el-table-column>
       <el-table-column prop="productTitle" label="产品名称" />
-      <el-table-column prop="customerName" label="客户名称" width="100" />
-      <el-table-column prop="deliveryDate" label="交货日期" />
       <el-table-column prop="productCount" label="成品数量" />
-      <!-- <el-table-column prop="shipmentWay" label="订单状态" /> -->
-      <el-table-column label="操作" width="130px" align="center" fixed="right">
+      <el-table-column prop="deliveryDate" label="交货日期" width="150px" />
+      <el-table-column prop="finishProcedure" label="完成工序" width="76px" />
+      <el-table-column prop="progress" label="完成进度" width="76px" />
+      <el-table-column label="操作" width="110px" align="center" fixed="right">
         <template slot-scope="scope">
           <span class="click-btn" @click="goto('edit', scope.row.id)">编辑</span>
           <span class="click-btn" @click="deleteItem(scope.row.id)">删除</span>
@@ -47,6 +48,7 @@ export default {
   name: 'Order',
   data() {
     return {
+      searchNum: '',
       tableData: [],
       page: {
         page: 1,
@@ -60,7 +62,7 @@ export default {
   },
   methods: {
     getList() {
-      getOrderList().then(res => {
+      getOrderList(this.searchNum, this.page.page, this.page.size).then(res => {
         if (res && res.content) {
           this.tableData = res.content
           this.page.total = res.totalElements
@@ -116,6 +118,11 @@ export default {
     .condition {
         display: flex;
         align-items: center;
+        .text {
+          display: none;
+          margin-right: 10px;
+          font-size: 14px;
+        }
     }
 }
 .click-btn {

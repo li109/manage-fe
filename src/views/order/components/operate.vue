@@ -100,7 +100,7 @@
 
 <script>
 
-import { getOrderDetails } from '@/api/private/order'
+import { getOrderDetails, getProcedureList } from '@/api/private/order'
 export default {
   name: 'Order',
   data() {

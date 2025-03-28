@@ -1,6 +1,9 @@
 import request from '@/utils/request'
 
-export function getOrderList(page, size) {
+export function getOrderList(orderNum, page, size) {
+  if(!orderNum) {
+    orderNum = '' 
+  }
   if (!page) {
     page = 1
   }
@@ -11,6 +14,7 @@ export function getOrderList(page, size) {
     url: 'api/order/list',
     method: 'get',
     params: {
+      orderNum,
       page,
       size
     }
@@ -51,5 +55,22 @@ export function getOrderNumList(orderNum) {
     params: {
       orderNum
     }
+  })
+}
+
+// 更改工序信息
+export function updateProcedure(data) {
+  return request({
+    url: 'api/procedure/update',
+    method: 'put',
+    data
+  })
+}
+
+// 查询工序下拉列表
+export function getProcedureList() {
+  return request({
+    url: 'api/procedure/getProcedureList',
+    method: 'get'
   })
 }
