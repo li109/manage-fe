@@ -1,23 +1,31 @@
 import request from '@/utils/request'
 
-export function getOrderList(orderNum, page, size) {
-  if(!orderNum) {
-    orderNum = '' 
-  }
-  if (!page) {
-    page = 1
-  }
-  if (!size) {
-    size = 10
-  }
+// export function getOrderList(orderNum, page, size) {
+//   if(!orderNum) {
+//     orderNum = '' 
+//   }
+//   if (!page) {
+//     page = 1
+//   }
+//   if (!size) {
+//     size = 10
+//   }
+//   return request({
+//     url: 'api/order/list',
+//     method: 'get',
+//     params: {
+//       orderNum,
+//       page,
+//       size
+//     }
+//   })
+// }
+
+export function getOrderList(params) {
   return request({
     url: 'api/order/list',
     method: 'get',
-    params: {
-      orderNum,
-      page,
-      size
-    }
+    params
   })
 }
 
@@ -92,3 +100,13 @@ export function getProcedureList() {
     method: 'get'
   })
 }
+
+// 完成订单
+export function finishOrders(params) {
+  return request({
+    url: 'api/order/finish',
+    method: 'post',
+    params,
+  })
+}
+

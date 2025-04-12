@@ -39,6 +39,8 @@ router.beforeEach((to, from, next) => {
       } else {
         next()
       }
+      // 存储当前路由, 带参无法保存
+      sessionStorage.setItem('path', to.path)
     }
   } else {
     /* has no token*/
@@ -53,15 +55,28 @@ router.beforeEach((to, from, next) => {
 
 export const loadMenus = (next, to) => {
   buildMenus().then(res => {
+    let pathIndex = ''
+    if (res.length && res[0].children.length > 0) {
+      res[0].children[0].meta.affix = true
+      pathIndex = res[0].path + '/' + res[0].children[0].path
+    }
+
     const sdata = JSON.parse(JSON.stringify(res))
     const rdata = JSON.parse(JSON.stringify(res))
     const sidebarRoutes = filterAsyncRouter(sdata)
     const rewriteRoutes = filterAsyncRouter(rdata, false, true)
+    rewriteRoutes.push({ path: '/', redirect: pathIndex, hidden: true })
     rewriteRoutes.push({ path: '*', redirect: '/404', hidden: true })
 
     store.dispatch('GenerateRoutes', rewriteRoutes).then(() => { // 存储路由
       router.addRoutes(rewriteRoutes) // 动态添加可访问路由表
-      next({ ...to, replace: true })
+      // next({ ...to, replace: true })
+      // let pathIndex = rewriteRoutes[0].path + '/' + rewriteRoutes[0].children[0].path
+      if (sessionStorage.getItem('path')) {
+        next({ path: sessionStorage.getItem('path'), replace: true })
+      } else {
+        next({ path: pathIndex, replace: true })
+      }
     })
     store.dispatch('SetSidebarRouters', sidebarRoutes)
   })

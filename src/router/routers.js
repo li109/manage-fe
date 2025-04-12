@@ -44,19 +44,19 @@ export const constantRouterMap = [
   //     }
   //   ]
   // },
-  {
-    path: '/',
-    component: Layout,
-    redirect: '/declare',
-    children: [
-      {
-        path: 'declare',
-        component: (resolve) => require(['@/views/declare'], resolve),
-        name: 'Declare',
-        meta: { title: '工序申报', icon: 'index', affix: true, noCache: true }
-      }
-    ]
-  },
+  // {
+  //   path: '/',
+  //   component: Layout,
+  //   redirect: '/declare',
+  //   children: [
+  //     {
+  //       path: 'declare',
+  //       component: (resolve) => require(['@/views/declare'], resolve),
+  //       name: 'Declare',
+  //       meta: { title: '工序申报', icon: 'index', affix: true, noCache: true }
+  //     }
+  //   ]
+  // },
   {
     path: '/user',
     component: Layout,

@@ -16,7 +16,7 @@
           <div class="details-content">
             <div class="content-item"><div>产品名称:</div><div>{{ form.productTitle }}</div></div>
             <div class="content-item"><div>成品数量:</div><div>{{ form.productCount }}</div></div>
-            <div class="content-item"><div>下单时间:</div><div>{{ form.orderTime }}</div></div>
+            <!-- <div class="content-item"><div>下单时间:</div><div>{{ form.orderTime }}</div></div> -->
             <div class="content-item"><div>客户名称:</div><div>{{ form.customerName }}</div></div>
             <div class="content-item"><div>交货日期:</div><div>{{ form.deliveryDate }}</div></div>
             <div class="content-item"><div>成品尺寸:</div><div>{{ form.productSize }}</div></div>
@@ -33,6 +33,19 @@
             <div class="content-item"><div>打包要求:</div><div>{{ form.packRequire }}</div></div>
             <div class="content-item"><div>重要备注:</div><div>{{ form.remarks }}</div></div>
             <div class="content-item"><div>开单员:</div><div>{{ form.createUserName }}</div></div>
+            <div class="content-item"><div>示例图片:</div>
+              <div>
+                <el-upload
+                  :class="{ upload: uploadDisabled }"
+                  action
+                  disabled
+                  :on-preview="handlePreview"
+                  :file-list="fileList"
+                  list-type="picture-card">
+                  <i class="el-icon-plus"></i>
+                </el-upload>
+              </div>
+            </div>
           </div>
         </el-collapse-item>
       </el-collapse>
@@ -45,14 +58,14 @@
             <span class="label-name">{{ scope.row.label }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="workmanship" label="工艺要求" />
-        <el-table-column label="已申报" align="center" width="68">
+        <!-- <el-table-column label="已申报" align="center" width="68"> -->
+        <el-table-column label="已申报" align="center">
           <template slot-scope="scope">
-            <span v-if="scope.row.produceNum || scope.row.lossNum || scope.row.createUserName" class="apply">已申报</span>
+            <span v-if="scope.row.createUser" class="apply">已申报</span>
             <span v-else class="click-btn" @click="apply(scope.row)">申报</span>
           </template>
         </el-table-column>
-        <el-table-column label="审核" align="center" width="68">
+        <el-table-column label="审核" align="center">
           <template slot-scope="scope">
             <span v-if="scope.row.isCheck" class="check">已审核</span>
             <span v-else class="click-btn" @click="check(scope.row)">审核</span>
@@ -64,10 +77,13 @@
     <el-dialog :title="applyTitle" :visible.sync="applyDialog" width="80%" :show-close="false" center>
       <el-form :model="applyForm" :rules="applyRules" ref="applyForm" :label-width="formLabelWidth">
         <el-form-item label="生产数量" prop="produceNum">
-          <el-input v-model="applyForm.produceNum" autocomplete="off"></el-input>
+          <el-input v-model="applyForm.produceNum" autocomplete="off" placeholder="请输入生产数量"></el-input>
         </el-form-item>
         <el-form-item label="损耗数量" prop="lossNum">
-          <el-input v-model="applyForm.lossNum" autocomplete="off"></el-input>
+          <el-input v-model="applyForm.lossNum" autocomplete="off" placeholder="请输入损耗数量"></el-input>
+        </el-form-item>
+        <el-form-item label="备注信息" >
+          <el-input v-model="applyForm.remarks" autocomplete="off" placeholder="请输入备注信息"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -78,10 +94,6 @@
     <el-dialog :title="checkTitle" :visible.sync="checkDialog" width="80%" :show-close="false" center>
       <div class="check-content">
         <div class="item">
-          <div>工艺要求</div>
-          <div>{{ currentCheck.workmanship }}</div>
-        </div>
-        <div class="item">
           <div>生产数量</div>
           <div>{{ currentCheck.produceNum }}</div>
         </div>
@@ -89,11 +101,20 @@
           <div>损耗数量</div>
           <div>{{ currentCheck.lossNum }}</div>
         </div>
+        <div class="item">
+          <div>备注信息</div>
+          <div>{{ currentCheck.remarks }}</div>
+        </div>
       </div>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancelCheck">取 消</el-button>
         <el-button type="primary" @click="confirmCheck">确 定</el-button>
       </div>
+    </el-dialog>
+
+    <!-- 放大图片 -->
+    <el-dialog :visible.sync="dialogVisible" width="100%">
+      <img width="100%" :src="imageUrl" alt="">
     </el-dialog>
   </div>
 </template>
@@ -140,7 +161,8 @@ export default {
       formLabelWidth: '80px',
       applyForm: {
         produceNum: '',
-        lossNum: ''
+        lossNum: '',
+        remarks: ''
       },
       applyRules:{
           produceNum: [{ required: true, message: '请输入生产数量', trigger: 'blur' }],
@@ -150,6 +172,10 @@ export default {
       checkDialog: false,
       checkTitle: '审核',
       currentCheck: {},
+      fileList: [],
+      dialogVisible: false,
+      uploadDisabled: false,
+      imageUrl: ''
     }
   },
   created() {
@@ -184,6 +210,12 @@ export default {
           this.showFlag = true;
           this.form = res;
           this.list = res.list.map(x => x);
+          if (res.fileUrl) {
+            this.fileList = [{ name: 'picture', url: process.env.VUE_APP_BASE_API + res.fileUrl }]
+          } else {
+            this.fileList = []
+          }
+          this.uploadDisabled = true
         }
       }).catch(() => {
         this.$message.error('查询失败');
@@ -194,12 +226,14 @@ export default {
         this.currentProcedure = deepClone(row);
         this.applyTitle = `${row.label}工序申报`;
         this.applyDialog = true;
+        this.applyForm.remarks = row.remarks
       }
     },
     cancelApply() {
       this.currentProcedure = {};
       this.applyForm.produceNum = '';
       this.applyForm.lossNum = '';
+      this.applyForm.remarks = '';
       this.applyDialog = false;
     },
     confirmApply() {
@@ -207,6 +241,7 @@ export default {
         if (valid) {
           this.currentProcedure.produceNum = this.applyForm.produceNum;
           this.currentProcedure.lossNum = this.applyForm.lossNum;
+          this.currentProcedure.remarks = this.applyForm.remarks;
           updateProcedure(this.currentProcedure).then(res => {
             if (!res) {
               this.cancelApply();
@@ -247,7 +282,12 @@ export default {
       }).catch(() => {
         this.$message.error('审核失败');
       });
-    }
+    },
+    // 查看图片
+    handlePreview(file) {
+      this.imageUrl = file.url;
+      this.dialogVisible = true;
+    },
   }
 }
 </script>
@@ -344,6 +384,12 @@ export default {
       width: calc(100% - 112px);
       margin-left: 10px;
     }
+  }
+}
+
+.upload {
+  ::v-deep .el-upload--picture-card {
+    display: none !important;
   }
 }
 </style>

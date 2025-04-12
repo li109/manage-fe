@@ -4,13 +4,9 @@
     <div class="form">
       <el-form ref="form" :disabled="type === 'view'" :inline="true" :model="form" :rules="rules" size="small"
         label-width="80px">
-        <el-form-item label="生产单号" prop="orderNum">
+        <!-- <el-form-item label="生产单号" prop="orderNum">
           <el-input v-model="form.orderNum" :placeholder="type === 'view' ? '' : '生产单号'" style="width: 190px;" />
-        </el-form-item>
-        <el-form-item label="下单时间" prop="orderTime">
-          <el-date-picker v-model="form.orderTime" type="datetime" :placeholder="type === 'view' ? '' : '选择下单时间'"
-            style="width: 190px;" value-format="yyyy-MM-dd HH:mm:ss" :prefix-icon="null" />
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item label="客户名称" prop="customerName">
           <el-input v-model="form.customerName" :placeholder="type === 'view' ? '' : '客户名称'" style="width: 190px;" />
         </el-form-item>
@@ -59,14 +55,31 @@
         <el-form-item label="出货方式" prop="shipmentWay">
           <el-input v-model="form.shipmentWay" :placeholder="type === 'view' ? '' : '出货方式'" style="width: 190px;" />
         </el-form-item>
-        <el-form-item label="开单员" prop="createUserName">
-          <el-input v-model="form.createUserName" :placeholder="type === 'view' ? '' : '开单员'" style="width: 190px;" />
+        <el-form-item label="开单员" prop="createUserName" v-if="type === 'edit'">
+          <el-input v-model="form.createUserName" :placeholder="type === 'view' ? '' : '开单员'" disabled style="width: 190px;" />
         </el-form-item>
         <el-form-item label="打包要求" prop="packRequire">
           <el-input v-model="form.packRequire" :placeholder="type === 'view' ? '' : '打包要求'" style="width: 720px;" />
         </el-form-item>
         <el-form-item label="重要备注" prop="remarks">
           <el-input v-model="form.remarks" :placeholder="type === 'view' ? '' : '重要备注'" style="width: 720px;" />
+        </el-form-item>
+        <el-form-item label="示例图片" style="width: 100%">
+          <el-upload
+            :class="{ upload: uploadDisabled }"
+            action
+            :http-request="uploadSection"
+            :on-preview="handlePreview"
+            :on-remove="handleRemove"
+            :on-error="handleError"
+            :before-upload="handleUpload"
+            :limit="1"
+            :file-list="fileList"
+            accept=".png, .jpg, .jpeg"
+            list-type="picture-card">
+            <i class="el-icon-plus"></i>
+            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过5M</div>
+          </el-upload>
         </el-form-item>
       </el-form>
     </div>
@@ -78,17 +91,13 @@
           <span class="label-name">{{ scope.row.label }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="workmanship" label="工艺要求" width="120" show-overflow-tooltip>
-        <template slot-scope="scope">
-          <span>{{ scope.row.workmanship }}</span>
-        </template>
-      </el-table-column>
       <el-table-column prop="produceNum" label="生产数量" />
       <el-table-column prop="lossNum" label="损耗数量" />
-      <el-table-column prop="createUserName" label="机长名称" width="100" />
-      <el-table-column prop="createTime" label="完成时间" width="150" />
-      <el-table-column prop="checkUserName" label="审核人员" width="100" />
-      <el-table-column prop="checkTime" label="审核时间" width="150" />
+      <el-table-column prop="createUserName" label="机长名称" />
+      <el-table-column prop="createTime" label="完成时间" />
+      <el-table-column prop="checkUserName" label="审核人员" />
+      <el-table-column prop="checkTime" label="审核时间" />
+      <el-table-column prop="remarks" label="备注信息" show-overflow-tooltip />
       <el-table-column v-if="type !== 'view'" label="操作" width="79" align="center" fixed="right">
         <template slot-scope="scope">
           <span class="click-btn" @click="showEdit(scope.row)">编辑</span>
@@ -99,18 +108,19 @@
     <div class="btns">
       <el-button type="info" @click="cancel">取消</el-button>
       <el-button v-if="type === 'add' || type === 'edit'" type="primary" @click="submit">提交</el-button>
+      <el-button v-if="type === 'edit'" type="success" @click="submitOrders">完成订单</el-button>
     </div>
 
     <el-dialog :title="editTitle" :visible.sync="editDialog" width="40%" :show-close="false" center>
       <el-form :model="editForm" ref="editForm" :label-width="formLabelWidth">
-        <el-form-item label="工艺要求">
-          <el-input v-model="editForm.workmanship" autocomplete="off"></el-input>
-        </el-form-item>
         <el-form-item label="生产数量">
-          <el-input v-model="editForm.produceNum" autocomplete="off"></el-input>
+          <el-input v-model="editForm.produceNum" autocomplete="off" placeholder="请输入生产数量"></el-input>
         </el-form-item>
         <el-form-item label="损耗数量">
-          <el-input v-model="editForm.lossNum" autocomplete="off"></el-input>
+          <el-input v-model="editForm.lossNum" autocomplete="off" placeholder="请输入损耗数量"></el-input>
+        </el-form-item>
+        <el-form-item label="备注信息">
+          <el-input v-model="editForm.remarks" type="textarea" autosize autocomplete="off" placeholder="请输入备注信息"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -118,13 +128,19 @@
         <el-button type="primary" @click="confirmEdit">确 定</el-button>
       </div>
     </el-dialog>
+
+    <el-dialog :visible.sync="dialogVisible">
+      <img width="100%" :src="imageUrl" alt="">
+    </el-dialog>
   </div>
 </template>
 
 <script>
 
 import { deepClone } from '@/utils/index'
-import { getOrderDetails, getProcedureList, addOrder, editOrder } from '@/api/private/order'
+import { getOrderDetails, getProcedureList, addOrder, editOrder, finishOrders } from '@/api/private/order'
+import axios from 'axios'
+import { getToken } from '@/utils/auth'
 export default {
   name: 'Order',
   data() {
@@ -133,7 +149,7 @@ export default {
       id: '',
       loading: false,
       form: {
-        orderNum: '', // 生产单号
+        // orderNum: '', // 生产单号
         orderTime: '', // 下单时间
         customerName: '', // 客户名称
         productTitle: '', // 产品名称
@@ -152,7 +168,8 @@ export default {
         shipmentWay: '', // 出货方式
         packRequire: '', // 打包要求
         remarks: '', // 重要备注
-        createUserName: '' // 开单员
+        createUserName: '', // 开单员,
+        fileUrl: '' // 附件地址
       },
       rules: {
         orderNum: [{ required: true, message: '请输入生产单号', trigger: 'blur' }]
@@ -162,10 +179,14 @@ export default {
       editTitle: '编辑',
       formLabelWidth: '80px',
       editForm: {
-        workmanship: '',
         produceNum: '',
-        lossNum: ''
+        lossNum: '',
+        remarks: ''
       },
+      imageUrl: '',
+      uploadDisabled: false,
+      dialogVisible: false,
+      fileList: []
     }
   },
   beforeCreate() {
@@ -189,6 +210,8 @@ export default {
       this.getProcedure()
     }
   },
+  mounted() {
+  },
   methods: {
     getDetails() {
       getOrderDetails(this.id).then(res => {
@@ -196,6 +219,14 @@ export default {
         if (res) {
           this.form = res
           this.list = res.list
+          if (res.fileUrl) {
+            this.fileList = [{ name: 'picture', url: process.env.VUE_APP_BASE_API + res.fileUrl }]
+            this.uploadDisabled = true
+          } else {
+            this.fileList = []
+          }
+          console.log('form:', this.form.customerName)
+          console.log('form:', this.form)
         }
       }).catch(() => {
         this.loading = false
@@ -272,22 +303,80 @@ export default {
     },
     cancelEdit() {
       this.editForm = {
-        workmanship: '',
         produceNum: '',
-        lossNum: ''
+        lossNum: '',
+        remarks: ''
       }
       this.editDialog = false
     },
     confirmEdit() {
       for (let i = 0; i < this.list.length; i++) {
         if (this.list[i].label === this.editForm.label) {
-          this.list[i].workmanship = this.editForm.workmanship
+          this.list[i].remarks = this.editForm.remarks
           this.list[i].produceNum = this.editForm.produceNum
           this.list[i].lossNum = this.editForm.lossNum
           break
         }
       }
       this.cancelEdit()
+    },
+    // 限制图片上传大小
+    handleUpload(file) {
+      const isJPG = file.type === 'image/jpeg' || file.type === 'image/png';
+      const isLt5M = file.size / 1024 / 1024 < 5;
+
+      if (!isJPG) {
+        this.$message.error('上传示例图片只能是 JPG/PNG 格式!');
+      }
+      if (!isLt5M) {
+        this.$message.error('上传示例图片大小不能超过 5MB!');
+      }
+      return isJPG && isLt5M;
+    },
+    // 查看图片
+    handlePreview(file) {
+      this.imageUrl = file.url;
+      this.dialogVisible = true;
+    },
+    // 删除图片
+    handleRemove(file, fileList) {
+      console.log(fileList)
+      this.uploadDisabled = false
+    },
+    // 上传出误
+    handleError() {
+      this.$message.error('上传错误，请稍后重试。')
+    },
+    // 上传图片
+    uploadSection(file) {
+      const formData = new FormData();
+      formData.append('file', file.file);
+      axios.post(process.env.VUE_APP_BASE_API + '/api/order/upload', formData, {
+        headers: {
+          'Authorization': getToken(),
+          'Content-Type': 'multipart/form-data'
+        }
+      }).then((res) => {
+        this.form.fileUrl = res.data
+        this.uploadDisabled = true
+      }).catch((e) => {
+        this.$message.error('上传错误，请联系管理员')
+      })
+    },
+    // 完成订单
+    submitOrders() {
+      this.$confirm('此操作将完成订单, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        finishOrders({ id: this.id }).then((res) => {
+          this.$message.success('订单已完成')
+          this.$router.go(-1)
+        }).catch((e) => {
+          this.$message.error('订单完成失败')
+        });
+      })
     }
   }
 }
@@ -327,6 +416,12 @@ export default {
     color: #409EFF;
     cursor: pointer;
     margin-right: 6px;
+  }
+
+  .upload {
+    ::v-deep .el-upload--picture-card {
+      display: none !important;
+    }
   }
 }
 </style>
