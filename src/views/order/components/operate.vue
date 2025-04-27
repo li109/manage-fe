@@ -14,8 +14,8 @@
           <el-input v-model="form.productTitle" :placeholder="type === 'view' ? '' : '产品名称'" style="width: 190px;" />
         </el-form-item>
         <el-form-item label="交货日期" prop="deliveryDate">
-          <el-date-picker v-model="form.deliveryDate" type="datetime" :placeholder="type === 'view' ? '' : '选择交货日期'"
-            style="width: 190px;" value-format="yyyy-MM-dd HH:mm:ss" :prefix-icon="null" />
+          <el-date-picker v-model="form.deliveryDate" type="date" :placeholder="type === 'view' ? '' : '选择交货日期'"
+            style="width: 190px;" value-format="yyyy-MM-dd" :prefix-icon="null" />
         </el-form-item>
         <el-form-item label="成品数量" prop="productCount">
           <el-input-number v-model="form.productCount" :placeholder="type === 'view' ? '' : '成品数量'"
@@ -30,6 +30,9 @@
         <el-form-item label="面纸配置" prop="facialTissueSet">
           <el-input v-model="form.facialTissueSet" :placeholder="type === 'view' ? '' : '面纸配置'" style="width: 190px;" />
         </el-form-item>
+        <el-form-item label="面纸尺寸" prop="facialTissueSize">
+          <el-input v-model="form.facialTissueSize" :placeholder="type === 'view' ? '' : '面纸尺寸'" style="width: 190px;" />
+        </el-form-item>
         <el-form-item label="调纸尺寸" prop="adjustPaperSize">
           <el-input v-model="form.adjustPaperSize" :placeholder="type === 'view' ? '' : '调纸尺寸'" style="width: 190px;" />
         </el-form-item>
@@ -38,6 +41,9 @@
         </el-form-item>
         <el-form-item label="印刷颜色" prop="printColor">
           <el-input v-model="form.printColor" :placeholder="type === 'view' ? '' : '印刷颜色'" style="width: 190px;" />
+        </el-form-item>
+        <el-form-item label="印刷专色" prop="spotColor">
+          <el-input v-model="form.spotColor" :placeholder="type === 'view' ? '' : '印刷专色'" style="width: 190px;" />
         </el-form-item>
         <el-form-item label="瓦纸配置" prop="tilePaperSet">
           <el-input v-model="form.tilePaperSet" :placeholder="type === 'view' ? '' : '瓦纸配置'" style="width: 190px;" />
@@ -59,10 +65,10 @@
           <el-input v-model="form.createUserName" :placeholder="type === 'view' ? '' : '开单员'" disabled style="width: 190px;" />
         </el-form-item>
         <el-form-item label="打包要求" prop="packRequire">
-          <el-input v-model="form.packRequire" :placeholder="type === 'view' ? '' : '打包要求'" style="width: 720px;" />
+          <el-input v-model="form.packRequire" :placeholder="type === 'view' ? '' : '打包要求'" style="width: 475px;" />
         </el-form-item>
         <el-form-item label="重要备注" prop="remarks">
-          <el-input v-model="form.remarks" :placeholder="type === 'view' ? '' : '重要备注'" style="width: 720px;" />
+          <el-input v-model="form.remarks" :placeholder="type === 'view' ? '' : '重要备注'" style="width: 475px;" />
         </el-form-item>
         <el-form-item label="示例图片" style="width: 100%">
           <el-upload
@@ -73,7 +79,7 @@
             :on-remove="handleRemove"
             :on-error="handleError"
             :before-upload="handleUpload"
-            :limit="1"
+            :limit="3"
             :file-list="fileList"
             accept=".png, .jpg, .jpeg"
             list-type="picture-card">
@@ -84,8 +90,16 @@
       </el-form>
     </div>
     <div class="space">工序详情：</div>
-    <el-table :data="list" style="width: 100%">
-      <el-table-column type="index" label="序号" width="50" />
+    <el-table
+      :data="list"
+      ref="multipleTable"
+      style="width: 100%"
+      @select="handleSelectChange"
+      @select-all="handleSelectAllChange"
+      @selection-change="handleSelectionChange"
+    >
+      <el-table-column type="selection" width="55" v-if="type != 'view'"/>
+      <el-table-column type="index" label="序号" width="55" />
       <el-table-column prop="label" label="工序名称" width="100">
         <template slot-scope="scope">
           <span class="label-name">{{ scope.row.label }}</span>
@@ -95,12 +109,12 @@
       <el-table-column prop="lossNum" label="损耗数量" />
       <el-table-column prop="createUserName" label="机长名称" />
       <el-table-column prop="createTime" label="完成时间" />
-      <el-table-column prop="checkUserName" label="审核人员" />
-      <el-table-column prop="checkTime" label="审核时间" />
+      <!-- <el-table-column prop="checkUserName" label="审核人员" />
+      <el-table-column prop="checkTime" label="审核时间" /> -->
       <el-table-column prop="remarks" label="备注信息" show-overflow-tooltip />
       <el-table-column v-if="type !== 'view'" label="操作" width="79" align="center" fixed="right">
         <template slot-scope="scope">
-          <span class="click-btn" @click="showEdit(scope.row)">编辑</span>
+          <span v-if="scope.row.isShow" class="click-btn" @click="showEdit(scope.row)">编辑</span>
         </template>
       </el-table-column>
     </el-table>
@@ -111,6 +125,7 @@
       <el-button v-if="type === 'edit'" type="success" @click="submitOrders">完成订单</el-button>
     </div>
 
+    <!-- 弹框 -->
     <el-dialog :title="editTitle" :visible.sync="editDialog" width="40%" :show-close="false" center>
       <el-form :model="editForm" ref="editForm" :label-width="formLabelWidth">
         <el-form-item label="生产数量">
@@ -129,6 +144,7 @@
       </div>
     </el-dialog>
 
+    <!-- 放大图片 -->
     <el-dialog :visible.sync="dialogVisible">
       <img width="100%" :src="imageUrl" alt="">
     </el-dialog>
@@ -186,7 +202,9 @@ export default {
       imageUrl: '',
       uploadDisabled: false,
       dialogVisible: false,
-      fileList: []
+      fileList: [],
+      multipleSelection: [],
+      disableAll: true
     }
   },
   beforeCreate() {
@@ -214,48 +232,96 @@ export default {
   },
   methods: {
     getDetails() {
-      getOrderDetails(this.id).then(res => {
-        this.loading = false
-        if (res) {
-          this.form = res
-          this.list = res.list
-          if (res.fileUrl) {
-            this.fileList = [{ name: 'picture', url: process.env.VUE_APP_BASE_API + res.fileUrl }]
-            this.uploadDisabled = true
-          } else {
-            this.fileList = []
+      this.getProcedure().then(() => {
+        getOrderDetails(this.id).then(res => {
+          this.loading = false
+          if (res) {
+            this.form = res
+            // 查看只显示返回数据
+            if (this.type === 'view') {
+              this.list = res.list
+            } else {
+              if (res.list) {
+                this.multipleSelection = res.list
+                console.log('list2222', this.list)
+                res.list.forEach(item => {
+                  this.list.forEach(row => {
+                    if (row.label == item.label) {
+                      row.produceNum = item.produceNum
+                      row.lossNum = item.lossNum
+                      row.createUserName = item.createUserName
+                      row.createTime = item.createTime
+                      row.remarks = item.remarks
+                      row.id = item.id
+                      row.isShow = true
+                      this.$refs.multipleTable.toggleRowSelection(row);
+                    }
+                  })
+                });
+              } else {
+                this.$refs.multipleTable.clearSelection();
+              }
+            }
+            if (res.fileUrl) {
+              this.fileList = res.fileUrl.split(',').map((x, i) => {
+                return { name: i + '.png', url: x }
+              })
+            } else {
+              this.fileList = []
+            }
           }
-          console.log('form:', this.form.customerName)
-          console.log('form:', this.form)
-        }
-      }).catch(() => {
-        this.loading = false
+        }).catch(() => {
+          this.loading = false
+        })
       })
     },
-    getProcedure() {
-      getProcedureList().then(res => {
-        this.loading = false
-        if (res && res.length) {
-          this.list = res.map(x => {
-            return {
-              label: x.label,
-              detailValue: x.value,
-              workmanship: '',
-              produceNum: '',
-              lossNum: '',
-            }
-          })
+    async getProcedure() {
+      let list = await getProcedureList()
+      this.loading = false
+      this.list = list.map(x => {
+        return {
+          label: x.label,
+          detailValue: x.value,
+          workmanship: '',
+          produceNum: '',
+          lossNum: '',
+          createUserName: '',
+          createTime: '',
+          remarks: '',
+          id: '',
+          isShow: false
         }
-      }).catch(() => {
-        this.loading = false
       })
+      console.log('list1111', this.list)
+      // getProcedureList().then(res => {
+      //   this.loading = false
+      //   if (res && res.length) {
+      //     this.list = res.map(x => {
+      //       return {
+      //         label: x.label,
+      //         detailValue: x.value,
+      //         workmanship: '',
+      //         produceNum: '',
+      //         lossNum: '',
+      //         createUserName: '',
+      //         createTime: '',
+      //         remarks: '',
+      //         id: '',
+      //         isShow: false
+      //       }
+      //     })
+      //   }
+      // }).catch(() => {
+      //   this.loading = false
+      // })
     },
     submit() {
       if (this.type === 'add') {
         this.$refs.form.validate(valid => {
           if (valid) {
             this.loading = true
-            this.form.list = this.list
+            this.form.list = this.multipleSelection
+            this.form.fileUrl = this.fileList.map(x => x.url).join(',')
             addOrder(this.form).then(res => {
               this.loading = false
               if (!res) {
@@ -275,7 +341,9 @@ export default {
         this.$refs.form.validate(valid => {
           if (valid) {
             this.loading = true
-            this.form.list = this.list
+            this.form.list = this.multipleSelection
+            console.log('multipleSelection', this.multipleSelection)
+            this.form.fileUrl = this.fileList.map(x => x.url).join(',')
             editOrder(this.form).then(res => {
               this.loading = false
               if (!res) {
@@ -340,8 +408,7 @@ export default {
     },
     // 删除图片
     handleRemove(file, fileList) {
-      console.log(fileList)
-      this.uploadDisabled = false
+      this.fileList = fileList
     },
     // 上传出误
     handleError() {
@@ -357,8 +424,9 @@ export default {
           'Content-Type': 'multipart/form-data'
         }
       }).then((res) => {
-        this.form.fileUrl = res.data
-        this.uploadDisabled = true
+        if (this.fileList.length < 3) {
+          this.fileList.push({ name: file.name, url: process.env.VUE_APP_BASE_API + res.data[0] })
+        }
       }).catch((e) => {
         this.$message.error('上传错误，请联系管理员')
       })
@@ -377,6 +445,43 @@ export default {
           this.$message.error('订单完成失败')
         });
       })
+    },
+    // 选择工序
+    handleSelectionChange(val) {
+      this.multipleSelection = val;
+    },
+    // 单个选择
+    handleSelectChange(val, row) {
+      this.list.forEach(item => {
+        if (item.label == row.label) item.isShow = !row.isShow
+      })
+    },
+    // 全选
+    handleSelectAllChange(val) {
+      if (val.length > 0) {
+        this.list.forEach(item => item.isShow = true)
+      } else {
+        this.list.forEach(item => item.isShow = false)
+      }
+    }
+    // isSelectable(row) {
+    //   if (this.type === 'edit' || this.type === 'add') {
+    //     return this.disableAll;
+    //   } else {
+    //     return !this.disableAll;
+    //   }
+    // }
+  },
+  watch: {
+    fileList: {
+      handler(newVal) {
+        if (newVal.length >= 3) {
+          this.uploadDisabled = true 
+        } else {
+          this.uploadDisabled = false 
+        }
+      },
+      deep: true
     }
   }
 }

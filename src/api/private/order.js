@@ -110,3 +110,11 @@ export function finishOrders(params) {
   })
 }
 
+// 生成新订单
+export function copyOrders(params) {
+  return request({
+    url: 'api/order/copy',
+    method: 'post',
+    params,
+  })
+}

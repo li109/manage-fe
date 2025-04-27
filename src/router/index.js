@@ -39,8 +39,10 @@ router.beforeEach((to, from, next) => {
       } else {
         next()
       }
-      // 存储当前路由, 带参无法保存
-      sessionStorage.setItem('path', to.path)
+      let url = ''
+      if (window.location.search) url = window.location.search
+      // 存储当前路由
+      sessionStorage.setItem('path', to.path + url)
     }
   } else {
     /* has no token*/
@@ -71,7 +73,6 @@ export const loadMenus = (next, to) => {
     store.dispatch('GenerateRoutes', rewriteRoutes).then(() => { // 存储路由
       router.addRoutes(rewriteRoutes) // 动态添加可访问路由表
       // next({ ...to, replace: true })
-      // let pathIndex = rewriteRoutes[0].path + '/' + rewriteRoutes[0].children[0].path
       if (sessionStorage.getItem('path')) {
         next({ path: sessionStorage.getItem('path'), replace: true })
       } else {
