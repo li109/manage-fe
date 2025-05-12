@@ -118,3 +118,21 @@ export function copyOrders(params) {
     params,
   })
 }
+
+// 工序统计列表
+export function getListProcessStatisticians(params) {
+  return request({
+    url: 'api/procedure/getListByProcedure',
+    method: 'get',
+    params,
+  })
+}
+
+// 工序统计总数
+export function getTotal(params) {
+  return request({
+    url: 'api/procedure/getTotal',
+    method: 'get',
+    params,
+  })
+}

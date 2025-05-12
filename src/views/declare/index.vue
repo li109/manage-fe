@@ -1,17 +1,24 @@
 <template>
   <div class="app-container">
     <div class="header-container">
-      <el-col :span="18">
-        <span class="input-label">生产单号:</span>
-        <el-autocomplete v-model="orderNum" :fetch-suggestions="querySearchAsync" placeholder="请输入生产单号"
+      <!-- <el-col :span="18">
+        <span class="input-label">产品名称:</span>
+        <el-input v-model="search.productTitle" placeholder="请输入产品名称"></el-input>
+        <el-autocomplete v-model="orderNum" :fetch-suggestions="querySearchAsync" placeholder="请输入产品名称"
           @select="handleSelect" clearable></el-autocomplete>
       </el-col>
       <el-col :span="6">
         <div class="btns">
-          <el-button type="primary" size="mini" @click="queryOrder">查询</el-button>
+          <el-button type="primary" @click="queryOrder">查询</el-button>
           <el-button size="mini" @click="reset">重置</el-button>
         </div>
-      </el-col>
+      </el-col> -->
+      <el-form :inline="true" :model="search" class="form-inline">
+        <el-form-item label="产品名称">
+          <el-input v-model="search.productTitle" placeholder="请输入产品名称"></el-input>
+        </el-form-item>
+        <el-button type="primary" @click="getList(1)">查询</el-button>
+      </el-form>
     </div>
 
     <div v-if="!showFlag">
@@ -33,6 +40,8 @@
         <el-table-column prop="tilePaperSet" label="瓦纸配置"></el-table-column>
         <el-table-column prop="tilePaperSize" label="瓦纸尺寸"></el-table-column>
         <el-table-column prop="productSize" label="成品尺寸"></el-table-column>
+        <el-table-column prop="specialStr" label="特殊工序"></el-table-column>
+        <el-table-column prop="remarks" label="备注"></el-table-column>
       </el-table>
 
       <el-pagination
@@ -106,6 +115,7 @@
         <el-table-column label="机长签字" align="center" prop="createUserName"></el-table-column>
         <el-table-column label="申报数量" align="center" prop="produceNum"></el-table-column>
         <el-table-column label="损耗数量" align="center" prop="lossNum"></el-table-column>
+        <el-table-column label="备注" align="center" prop="remarks"></el-table-column>
         <!-- <el-table-column label="审核" align="center">
           <template slot-scope="scope">
             <span v-if="scope.row.isCheck" class="check">已审核</span>
@@ -123,9 +133,9 @@
         <el-form-item label="损耗数量" prop="lossNum">
           <el-input v-model="applyForm.lossNum" autocomplete="off" placeholder="请输入损耗数量"></el-input>
         </el-form-item>
-        <el-form-item label="备注信息" >
-          <el-input v-model="applyForm.remarks" type="textarea" autocomplete="off" placeholder="请输入备注信息"></el-input>
-        </el-form-item>
+        <!-- <el-form-item label="备注信息" >
+          <el-input v-model="applyForm.remarks" disabled type="textarea" autocomplete="off" placeholder="请输入备注信息"></el-input>
+        </el-form-item> -->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="cancelApply">取 消</el-button>
@@ -170,6 +180,7 @@ import {
   updateCheck,
   getOrderList
 } from '@/api/private/order'
+import { search } from 'core-js/fn/symbol';
 export default {
   name: 'Order',
   data() {
@@ -228,6 +239,7 @@ export default {
       loading: false,
       search: {
         isFinish: 0,
+        productTitle: '',
         page: 1,
         size: 10,
       }
@@ -383,6 +395,7 @@ export default {
           this.tableData = res.content
           this.total = res.totalElements
           this.loading = false
+          this.showFlag = false
         }
       }).catch((e) => {
         this.loading = false
@@ -391,7 +404,7 @@ export default {
     // 表格条数
     handleSizeChange(val) {
       this.search.size = val
-      this.getList()
+      this.getList(1)
     },
     // 表格页码
     handleCurrentChange(val) {
@@ -415,7 +428,7 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    // margin-bottom: 15px;
     .left {
       display: flex;
       align-items: center;

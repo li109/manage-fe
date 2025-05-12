@@ -65,10 +65,11 @@
           <el-input v-model="form.createUserName" :placeholder="type === 'view' ? '' : '开单员'" disabled style="width: 190px;" />
         </el-form-item>
         <el-form-item label="打包要求" prop="packRequire">
-          <el-input v-model="form.packRequire" :placeholder="type === 'view' ? '' : '打包要求'" style="width: 475px;" />
+          <el-input v-model="form.packRequire" type="textarea" autosize :placeholder="type === 'view' ? '' : '打包要求'" style="width: 475px;" />
+          <!-- <el-input v-model="form.packRequire" type="textarea" :placeholder="type === 'view' ? '' : '打包要求'" style="width: 475px;" /> -->
         </el-form-item>
         <el-form-item label="重要备注" prop="remarks">
-          <el-input v-model="form.remarks" :placeholder="type === 'view' ? '' : '重要备注'" style="width: 475px;" />
+          <el-input v-model="form.remarks" type="textarea" autosize :placeholder="type === 'view' ? '' : '重要备注'" style="width: 475px;" />
         </el-form-item>
         <el-form-item label="示例图片" style="width: 100%">
           <el-upload

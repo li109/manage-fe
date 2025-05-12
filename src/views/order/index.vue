@@ -37,7 +37,7 @@
                 v-model="dateArr"
                 type="daterange"
                 value-format="yyyy-MM-dd"
-                range-separator="至"
+                range-separator="至 "
                 start-placeholder="开始日期"
                 end-placeholder="结束日期">
               </el-date-picker>
@@ -53,7 +53,10 @@
       </el-row>
     </div>
 
-    <el-button type="success" size="mini" @click="goto('add')">新增订单</el-button>
+    <div>
+      <el-button type="success" size="mini" @click="goto('add')">新增订单</el-button>
+      <el-button type="primary" size="mini" @click="handleProcess">工序统计</el-button>
+    </div>
 
     <el-table
       v-loading="loading"
@@ -106,12 +109,17 @@
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
     />
+
+    <ProcessStatistics
+      :dialogVisible.sync="dialogVisible"
+    ></ProcessStatistics>
   </div>
 </template>
 
 <script>
 
 import { getOrderList, deleteOrder, copyOrders } from '@/api/private/order'
+import ProcessStatistics from "./components/processStatistics.vue"
 export default {
   name: 'Order',
   data() {
@@ -131,8 +139,12 @@ export default {
       total: 0,
       dateArr: [],
       tableData: [],
-      loading: false
+      loading: false,
+      dialogVisible: false,
     }
+  },
+  components: {
+    ProcessStatistics
   },
   created() {
     this.getList()
@@ -228,6 +240,10 @@ export default {
         })
       })
     },
+    // 工序统计
+    handleProcess() {
+      this.dialogVisible = true
+    }
   }
 }
 </script>
@@ -245,6 +261,10 @@ export default {
           margin-right: 10px;
           font-size: 14px;
         }
+    }
+
+    ::v-deep .el-range-separator {
+      width: 7%;
     }
 }
 .click-btn {
